@@ -283,8 +283,8 @@ medical-text-simplification-qlora/
 ├── requirements.txt                             # Python dependencies
 ├── code/                                        # Source code
 │   ├── train.py                                 # Main training script
-│   └── evaluate.py                              # Evaluation script
-├── evaluate_baseline.py                         # Baseline (pre-fine-tune) evaluation
+│   ├── evaluate.py                              # Evaluation script
+│   └── evaluate_baseline.py                     # Baseline (pre-fine-tune) evaluation
 └── assets/                                      # Charts & screenshots (add after training)
     ├── training_loss.png
     └── eval_loss.png

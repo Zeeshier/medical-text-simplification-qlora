@@ -6,6 +6,8 @@ Fine-tuning **Meta Llama-3.2-1B-Instruct** using **QLoRA (4-bit NF4)** to simpli
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+**Experiment Tracking**: [Weights & Biases Run](https://wandb.ai/zeeshanwarraich51-the-university-of-lahore/llama3-medical-simplification)
+
 ---
 
 ## 📋 Table of Contents
@@ -152,7 +154,58 @@ Simplify the following medical text:
 
 ---
 
-## 💡 Discussion
+## � Limitations & Known Issues
+
+1. **Domain Bias:** Trained exclusively on PLOS journal articles. It may not generalize well to clinical notes, FDA documents, or other distinct medical text types.
+2. **Context Truncation:** Source articles were truncated to 2,000 characters during training, meaning long-form papers may lose critical context.
+3. **Factual Accuracy Risk:** While the model is instructed to preserve facts, simplification inherently carries the risk of omitting important nuances or occasionally introducing inaccuracies.
+4. **Clinical Advisory:** This model is NOT a medical device and should NOT be used for diagnosis, treatment, or medical advice under any circumstances. Simplified texts should ideally be reviewed by healthcare professionals before patient-facing use.
+
+---
+
+## 💻 Code Example (Inference)
+
+Here is how to load the fine-tuned LoRA adapters with the base Llama 3.2 model for inference:
+
+```python
+from peft import PeftModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+
+base_model_id = "meta-llama/Llama-3.2-1B-Instruct"
+adapter_id = "zeeshier/llama-3.2-1b-medical-simplifier" # Or path to local ./final_model
+
+# 1. Load Base Model
+base_model = AutoModelForCausalLM.from_pretrained(
+    base_model_id,
+    torch_dtype=torch.float16,
+    device_map="auto",
+)
+
+# 2. Load LoRA Adapters
+model = PeftModel.from_pretrained(base_model, adapter_id)
+tokenizer = AutoTokenizer.from_pretrained(adapter_id)
+
+# 3. Format Prompt
+prompt = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are a medical text simplifier. Your job is to rewrite complex medical and scientific text so that a 5th grader can easily understand it. Use simple words, short sentences, and explain any technical terms. Keep the key facts accurate.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Simplify the following medical text:
+
+The pathogenesis of Type 2 diabetes involves insulin resistance...<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+"""
+
+# 4. Generate
+inputs = tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu")
+outputs = model.generate(**inputs, max_new_tokens=256, temperature=0.7)
+print(tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True))
+```
+
+---
+
+## �💡 Discussion
 
 ### What Worked Well
 - **QLoRA is extremely VRAM-efficient**: 4-bit NF4 quantization with double quant fits the entire 1.24B model in <2GB, leaving ample room for training on a 16GB T4.
@@ -226,28 +279,16 @@ python code/evaluate.py --model_path ./final_model --num_samples 50
 
 ```
 medical-text-simplification-qlora/
-├── README.md                                    # This file
-├── MODEL_CARD.md                                # Model documentation
+├── README.md                                    # Complete Model Card and Setup
 ├── requirements.txt                             # Python dependencies
-├── code/                                         # Source code
+├── code/                                        # Source code
 │   ├── train.py                                 # Main training script
 │   └── evaluate.py                              # Evaluation script
 ├── evaluate_baseline.py                         # Baseline (pre-fine-tune) evaluation
 └── assets/                                      # Charts & screenshots (add after training)
     ├── training_loss.png
-    └── eval_results.png
+    └── eval_loss.png
 ```
-
----
-
-## 📄 Model Card
-
-See [MODEL_CARD.md](MODEL_CARD.md) for full documentation including:
-- Intended uses and limitations
-- Training data details
-- Evaluation results
-- Ethical considerations
-- Carbon footprint
 
 ---
 

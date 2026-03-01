@@ -209,10 +209,10 @@ export HF_TOKEN="your_hf_token"
 export WANDB_API_KEY="your_wandb_key"
 
 # Run training
-python src/train.py
+python code/train.py
 
 # Run standalone evaluation (after training)
-python src/evaluate.py --model_path ./final_model --num_samples 50
+python code/evaluate.py --model_path ./final_model --num_samples 50
 ```
 
 ### Environment-Specific Notes
@@ -229,7 +229,7 @@ medical-text-simplification-qlora/
 ├── README.md                                    # This file
 ├── MODEL_CARD.md                                # Model documentation
 ├── requirements.txt                             # Python dependencies
-├── src/                                         # Source code
+├── code/                                         # Source code
 │   ├── train.py                                 # Main training script
 │   └── evaluate.py                              # Evaluation script
 ├── evaluate_baseline.py                         # Baseline (pre-fine-tune) evaluation
